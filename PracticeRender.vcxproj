@@ -152,14 +152,18 @@
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Types\Math.cpp" />
+    <ClCompile Include="Types\Quaternion.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation\AnimationSystem.h" />
+    <ClInclude Include="Animation\Skeleton.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Font\Font.h" />
     <ClInclude Include="Model\SmdLoader.h" />
     <ClInclude Include="Sound\Sound.h" />
     <ClInclude Include="Types\HashTable.h" />
     <ClInclude Include="Types\Math.h" />
+    <ClInclude Include="Types\Quaternion.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Font\stb_image_write.h" />

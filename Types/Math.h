@@ -1,4 +1,5 @@
 #pragma once
+#define _USE_MATH_DEFINES
 #include <math.h>
 float lerp(float rangeA, float rangeB, float amnt);
 float invLerp(float val, float rangeA, float rangeB);
@@ -32,39 +33,45 @@ struct Vec3 {
         z -= r.z;
         return *this;
     }
-    Vec3& operator*=(const Vec3 &r) {
-        x *= r.x;
-        y *= r.y;
-        z *= r.z;
-        return *this;
-    }
-    Vec3& operator/=(const Vec3 &r) {
-        x /= r.x;
-        y /= r.y;
-        z /= r.z;
-        return *this;
-    }
 
-    void scale(float f) {
+	Vec3& operator*=(float s) {
+	}
+
+    Vec3& scale(float f) {
         x *= f;
         y *= f;
         z *= f;
-    }
+		return *this;
+	}
 
     float dot(const Vec3 &v) {
         return x * v.x + y * v.y + z * v.z;
     }
+
+	float len() {
+		return sqrtf((x * x) + (y * y) + (z * z));
+	}
+
+	void normalize() {
+		float length = len();
+		if (length == 0.0f) {
+			return;
+		}
+		x = x / length;
+		y = y / length;
+		z = z / length;
+	}
 
     float x{ 0.0f };
     float y{ 0.0f };
     float z{ 0.0f };
 };
 
+float dot(const Vec3 &l, const Vec3 &r);
+Vec3 scale(const Vec3 &l, float s);
 Vec3 cross(const Vec3 &l, const Vec3&r);
 Vec3 operator+(Vec3 l, const Vec3 &r);
 Vec3 operator-(Vec3 l, const Vec3 &r);
-Vec3 operator*(Vec3 l, const Vec3 &r);
-Vec3 operator/(Vec3 l, const Vec3 &r);
 Vec3 operator-(Vec3 l);
 
 struct Vec2 {
@@ -86,7 +93,7 @@ struct Vec4 {
 
     void normalize() {
         float length = len();
-        if (length == 0) {
+        if (length == 0.0f) {
             return;
         }
         x = x / length;
@@ -127,23 +134,6 @@ struct Vec4 {
         return *this;
     }
 
-    Vec4& operator*=(const Vec4 &r) {
-        x *= r.x;
-        y *= r.y;
-        z *= r.z;
-        w *= r.w;
-        return *this;
-    }
-
-    Vec4& operator/=(const Vec4 &r) {
-        x /= r.x;
-        y /= r.y;
-        z /= r.z;
-        w /= r.w;
-        return *this;
-    }
-
-
     float * ptr() { return &x; }
 
     float x, y, z, w;
@@ -152,8 +142,6 @@ struct Vec4 {
 
 Vec4 operator+(Vec4 l, const Vec4 &r);
 Vec4 operator-(Vec4 l, const Vec4 &r);
-Vec4 operator*(Vec4 l, const Vec4 &r);
-Vec4 operator/(Vec4 l, const Vec4 &r);
 Vec4 operator-(Vec4 r);
 
 
@@ -242,9 +230,17 @@ struct Mat4 {
         { 0,0,0,1 } // point
     };
 
-
 };
 
+Mat4 transpose(Mat4 m);
+
+Mat4 fromRot(Vec3 &rot);
+Mat4 invRotTrans(Vec3 transform, Vec3 rot);
 Mat4 operator*(Mat4 l, const Mat4 &r);
 
 Vec4 operator*(const Mat4 &mat, const Vec4 &v);
+
+
+
+// General math
+float degToRad(float deg);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Types/HashTable.h"
 #include "../Types/Math.h"
 
 #include <cstdint>
@@ -29,7 +28,7 @@ namespace Text {
         static const char start;
         static const char end;
         static const int apron;
-        Font() : kernTable(512), 
+        Font() : 
             scaleX(1.0f),
             scaleY(1.0f),
             heightPixels(0.0f),
@@ -51,7 +50,7 @@ namespace Text {
         int lineGap;
 
         Glyph *glyphs{ nullptr };
-        HashTablei kernTable;
+		int *kernTable{ nullptr };
     };
 
 

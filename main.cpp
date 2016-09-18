@@ -18,6 +18,10 @@
 #include <vector>
 #include "Model/SmdLoader.h"
 #include "Sound\Sound.h"
+
+#include "Animation\AnimationSystem.h"
+#include "Animation\Skeleton.h"
+
 using std::string;
 using std::cout;
 using std::cin;
@@ -176,12 +180,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 Text::Font f{};
 
+void animationSetup(RenderContext &renderContext, SMDModel &model) {
+	loadAnimationForExistingModel("anim.smd", &model);
+	Skeleton *skeleton = generateSkeleton(model);
+	AnimationClip *clip = extractSMDPoses(model, skeleton,0);
+	int i = 5;
+}
+
 void renderSetup(RenderContext &renderContext) {
     freopen("err.log", "w", stderr); // for debug output to file
     int texW = 512;
     int texH = 512;
     unsigned char * texture = new unsigned char[texW * texH]{ 0 };
-    f.heightPixels = 72.0f;// 64.0f;
+    f.heightPixels = 72.0f;// 64.0f; // 96.0f fits really well into 512x512
 
     Text::loadFontToTexture(f, "C:/Windows/Fonts/Arial.ttf", texture, texW, texH);
 
@@ -204,10 +215,11 @@ void renderSetup(RenderContext &renderContext) {
     renderContext.mat = Mat4::translate(Vec3(-0.95f, 0.0f, 0.0f)) * Mat4::scale(0.003f);
 
     loadFileToTexture("colormap.png", &renderContext.modelTextureBufferId);
-    SMDModel * model = parseSMDFile("box1.smd");
+	SMDModel * model = parseSMDFile("box1.smd");//"box1anim.smd");
     renderContext.modelRenderObj = loadSMDToVao(*model);
     renderContext.modelMat = Mat4::scale(0.5f);
  
+	animationSetup(renderContext, *model);
 }
 
 float rot = 0.0f;

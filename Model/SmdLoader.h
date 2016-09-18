@@ -5,7 +5,6 @@
 #include "../Util.h"
 #include "../Common.h"
 #include "../Render.h"
-
 #include <vector>
 
 using std::vector;
@@ -29,9 +28,12 @@ struct SMDGroup {
 };
 
 struct SMDBoneAnimationFrame {
-    int id;
+    int id;	// bone id
     Vec3 pos;
-    Vec3 rot;   // euler rotation in degrees
+	// euler rotation in degrees
+    float rotX;   
+	float rotY;
+	float rotZ;
 };
 
 struct SMDAnimationFrame {
@@ -39,16 +41,33 @@ struct SMDAnimationFrame {
     vector<SMDBoneAnimationFrame> bonePositions;
 };
 
+struct SMDSkeleton {
+	vector<SMDBone> bones;
+	SMDAnimationFrame bindPose;
+};
+
+struct SMDAnimation {
+	char * name;
+	vector<SMDAnimationFrame> animationFrames;
+};
+
 struct SMDModel {
+	// SOA specified data for the model
     vector<Vec3> vertices;
     vector<Vec3> normals;
     vector<Vec2> uvs;
     vector<int> parentBones;
     vector<SMDGroup> materialGroups;
 
-    vector<SMDBone> bones;
-    vector<SMDAnimationFrame> animationFrames;
+	SMDSkeleton skeleton;
+	vector<SMDAnimation> animations;
+	// Bone name and skeleton structure.
+//    vector<SMDBone> bones;
+//    vector<SMDAnimationFrame> animationFrames;
 };
+
+
+
 
 enum SMDParseState {
     TRIANGLES,
@@ -59,6 +78,7 @@ enum SMDParseState {
 
 struct SMDLoadContext {
     int curAnimationTime{ -1 };
+	int curAnimation{ -1 };	// -1 means bind pose, all others are named animations loaded separately.
 };
 
 void parseSMDTriangle(char * line, SMDModel &model) {
@@ -108,21 +128,40 @@ void parseSMDTriangle(char * line, SMDModel &model) {
 void parseSMDSkeleton(char *line, SMDModel &model, SMDLoadContext &context) {
     int time;
     if (1 == sscanf(line, "time %d", &time)) {
+		if (context.curAnimation == -1) {
+			// model layout will have a t0 for the bind pose but who cares
+			return;
+		}
+		SMDAnimation &curAnimation = model.animations[context.curAnimation];
+
         context.curAnimationTime = time;
         SMDAnimationFrame frame;
         frame.time = time;
-        model.animationFrames.push_back(frame);
+        curAnimation.animationFrames.push_back(frame);
     } else {
-        DBG_ASSERT(model.animationFrames.size() > 0, "Found animation frame data before time line in skeleton block!  line: %s", line);
-        SMDAnimationFrame &curFrame = model.animationFrames[model.animationFrames.size() - 1];
-        DBG_ASSERT(curFrame.time == context.curAnimationTime, "Somehow non-matching time for frame vs context.  Expected %d but found %d",
-            context.curAnimationTime, curFrame.time);
-        SMDBoneAnimationFrame boneFrame;
-        sscanf(line, "%d\t%f %f %f\t%f %f %f", 
-            &boneFrame.id, 
-            &boneFrame.pos.x, &boneFrame.pos.y, &boneFrame.pos.z,
-            &boneFrame.rot.x, &boneFrame.rot.y, &boneFrame.rot.z);
-        curFrame.bonePositions.push_back(boneFrame);
+		// Bind pose parsing!
+		if (context.curAnimation == -1 ) {
+			SMDBoneAnimationFrame boneFrame;
+			sscanf(line, "%d\t%f %f %f\t%f %f %f",
+				&boneFrame.id,
+				&boneFrame.pos.x, &boneFrame.pos.y, &boneFrame.pos.z,
+				&boneFrame.rotX, &boneFrame.rotY, &boneFrame.rotZ);
+			model.skeleton.bindPose.time = 0;
+			model.skeleton.bindPose.bonePositions.push_back(boneFrame);
+		} else {
+			SMDAnimation &curAnimation = model.animations[context.curAnimation];
+
+			DBG_ASSERT(curAnimation.animationFrames.size() > 0, "Found animation frame data before time line in skeleton block!  line: %s", line);
+			SMDAnimationFrame &curFrame = curAnimation.animationFrames[curAnimation.animationFrames.size() - 1];
+			DBG_ASSERT(curFrame.time == context.curAnimationTime, "Somehow non-matching time for frame vs context.  Expected %d but found %d",
+				context.curAnimationTime, curFrame.time);
+			SMDBoneAnimationFrame boneFrame;
+			sscanf(line, "%d\t%f %f %f\t%f %f %f",
+				&boneFrame.id,
+				&boneFrame.pos.x, &boneFrame.pos.y, &boneFrame.pos.z,
+				&boneFrame.rotX, &boneFrame.rotY, &boneFrame.rotZ);
+			curFrame.bonePositions.push_back(boneFrame);
+		}
     }
 }
 
@@ -148,12 +187,25 @@ void parseSMDNode(char * line, SMDModel &model) {
     strncpy(bone.name, line + wordStart, wordEnd - wordStart + 1);
     bone.name[wordEnd - wordStart + 1] = '\0';
     DBG_ASSERT(1 == sscanf((line + wordEnd +2 ), "%d", &bone.parentId), "expected parent id after name.  line: %s", line);
-    model.bones.push_back(bone);
+
+	bool matched = false;
+	for (unsigned int i = 0; i < model.skeleton.bones.size(); i++) {
+		if (bone.id == model.skeleton.bones[i].id) {
+			DBG_ASSERT(bone.parentId == model.skeleton.bones[i].parentId &&
+				strcmp(bone.name, model.skeleton.bones[i].name) == 0,
+				"Found matching bone id %d already in skeleton with differing components.  Expected parent %d and name %s but got %d %s",
+				bone.id, model.skeleton.bones[i].parentId, model.skeleton.bones[i].name, bone.parentId, bone.name);
+			matched = true;
+			break;
+		}
+	}
+	if (!matched) {
+		model.skeleton.bones.push_back(bone);
+	}
 }
 
 
-
-SMDModel *parseSMDFile(const char *fname) {
+void parseSMDFile(const char *fname, SMDModel *model, SMDLoadContext context) {
     FILE *fp;
     fp = fopen(fname, "r");
     DBG_ASSERT(fp != nullptr, "Unable to open file %s", fname);
@@ -161,8 +213,6 @@ SMDModel *parseSMDFile(const char *fname) {
     char *line = nullptr;
     int sz;
     SMDParseState curState = NONE;
-    SMDModel *model = new SMDModel();
-    SMDLoadContext context;
     while ((sz = getLine(&line, fp)) != 0) {
         if (curState != NONE) {
             if (sz >= 3 && strncmp(line, "end", 3) == 0) {
@@ -172,6 +222,9 @@ SMDModel *parseSMDFile(const char *fname) {
 
             switch (curState) {
             case TRIANGLES:
+				DBG_ASSERT(context.curAnimation == -1, 
+					"Expected to only find triangles on a primary model file, instead working on animation %d", 
+					context.curAnimation);
                 parseSMDTriangle(line, *model);
                 break;
             case SKELETON:
@@ -207,10 +260,26 @@ SMDModel *parseSMDFile(const char *fname) {
 
     // fix last material group
     model->materialGroups.back().num = (int)model->vertices.size() - model->materialGroups.back().startIndex;
-
-    return model;
 }
 
+// Call to parse primary model file
+SMDModel *parseSMDFile(const char *fname) {
+	SMDModel *model = new SMDModel();
+	parseSMDFile(fname, model, SMDLoadContext());
+	return model;
+}
+
+
+// After calling paqrseSMDFile, call this for subsequent animations
+void loadAnimationForExistingModel(char *fname, SMDModel *model) {
+	SMDLoadContext context;
+	SMDAnimation animation;
+	animation.name = fname;
+	context.curAnimation = (int)model->animations.size();
+	model->animations.push_back(animation);
+
+	parseSMDFile(fname, model, context);
+}
 
 
 RenderObject loadSMDToVao(SMDModel &m) {
