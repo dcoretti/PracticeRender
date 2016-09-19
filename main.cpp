@@ -183,7 +183,7 @@ Text::Font f{};
 void animationSetup(RenderContext &renderContext, SMDModel &model) {
 	loadAnimationForExistingModel("anim.smd", &model);
 	Skeleton *skeleton = generateSkeleton(model);
-	AnimationClip *clip = extractSMDPoses(model, skeleton,0);
+	AnimationClip *clip = extractAnimationClipFromSMD(model, skeleton,0);
 	int i = 5;
 }
 

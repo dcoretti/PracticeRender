@@ -230,6 +230,12 @@ struct Mat4 {
         { 0,0,0,1 } // point
     };
 
+	void setTranslation(Vec3& v) {
+		m[0][3] = v.x;
+		m[1][3] = v.y;
+		m[2][3] = v.z;
+		m[3][3] = 1.0f;
+	}
 };
 
 Mat4 transpose(Mat4 m);

@@ -61,6 +61,7 @@ struct Quat {
 		mat.m[2][1] = 2.0f * v.y * v.z - 2.0f * w * v.x;
 		mat.m[2][2] = 1.0f - 2.0f * (v.x * v.x) - 2.0f * (v.y * v.y);
 
+		return mat;
 	}
 
 	Vec3 rotate(Vec3 &p);

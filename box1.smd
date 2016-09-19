@@ -1,12 +1,10 @@
 version 1
 nodes
-0 "blender_implicit" -1
-1 "Bone" -1
+0 "Bone" -1
 end
 skeleton
 time 0
-0  0 0 0  0 0 0
-1  0.000000 -0.042951 -0.022509  -0.000000 0.000000 0.000000
+0  0.000000 -0.042951 -0.022509  -0.000000 0.000000 0.000000
 end
 triangles
 Material
