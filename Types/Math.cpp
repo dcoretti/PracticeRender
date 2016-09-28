@@ -81,7 +81,7 @@ Vec4 operator*(const Mat4 &mat, const Vec4 &v) {
 
 
 float degToRad(float deg) {
-	return deg * M_PI / 180.0f;
+	return deg * (float)M_PI / 180.0f;
 }
 
 
@@ -97,7 +97,7 @@ Mat4 transpose(Mat4 m) {
 
 Mat4 fromRot(Vec3 &r) {
 	Mat4 mRot;
-	float c = cos(r.x);
+	float c = cosf(r.x);
 
 	mRot.m[0][0] = cosf(r.y) * cosf(r.z); 
 	mRot.m[0][1] = cosf(r.z)*sinf(r.x)*sinf(r.y) - cosf(r.x)*sinf(r.z);

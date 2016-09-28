@@ -6,6 +6,8 @@ enum ShaderAttributeBinding {
     VERTICES = 0,
     UV = 1,
     NORMALS = 2,
+	JOINT_INDICES = 3,
+	JOINT_WEIGHTS = 4
 };
 
 struct RenderObject {
@@ -14,6 +16,7 @@ struct RenderObject {
     unsigned int vertices;
     unsigned int normals;
     unsigned int uvs;
+	unsigned int jointIndices;
 
     unsigned int numElements;
 };
@@ -24,6 +27,7 @@ namespace Uniform {
         int mv{ -1 };
         int v{ -1 };
         int m{ -1 };
+		int skinningPalette{ -1 };
         int diffuseTexture{ -1 };
         int normalMapTexture{ -1 };
 
@@ -35,7 +39,7 @@ namespace Uniform {
     static const char * mv = "mv";
     static const char * v = "v";
     static const char * m = "m";
-
+	static const char * skinningPalette = "skinningPalette";
     // Material components
     static const char * materialBlockIndex = "Material";
     static const char * lightSourceBlockIndex = "LightSource";
@@ -66,10 +70,12 @@ struct RenderGroup {
 
 void initAndSetVao(unsigned int *vaoBufferId);
 void loadBuffer(unsigned int *bufferId, int sizeBytes, void  *data, ShaderAttributeBinding shaderBinding, int perVertexComponents, int stride);
+void loadIntBuffer(unsigned int *bufferId, int sizeBytes, void  *data, ShaderAttributeBinding shaderBinding, int perVertexComponents, int stride);
+
 void loadTexture(unsigned int *bufferId, int width, int height, void * data, int internalFormat, int pixelFormat);
 void loadFileToTexture(const char * fname, unsigned int * bufferId);
 void createShader(Uniform::ShaderUniformLocations &shaderUniforms, unsigned int *shaderProgramId, const char * vertexSource, const char * fragmentSource);
 void drawVertexArray(unsigned int vaoBufferId, int numElements, int indexOfset = 0);
 void setTexture(unsigned int textureBufferId, int textureBufferSlot, int textureBufferUniformLocation);
 void setShader(unsigned int shaderProgramId);
-void setMatUniform(unsigned int uniformLocation, const Mat4 &mat);
+void setMatUniform(unsigned int uniformLocation, const Mat4 &mat, int size = 1);

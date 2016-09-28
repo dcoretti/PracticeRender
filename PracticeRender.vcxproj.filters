@@ -78,5 +78,6 @@
   <ItemGroup>
     <None Include="Shader\Texture.vert" />
     <None Include="Shader\Texture.frag" />
+    <None Include="Shader\Anim.vert" />
   </ItemGroup>
 </Project>

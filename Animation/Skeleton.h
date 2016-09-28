@@ -14,6 +14,7 @@ struct Joint {
 
 // LOCAL (relative to parent joint) pose information for a single joint
 struct Pose {
+	Mat4 orientationMat;
 	Quat orientation;
 	Vec3 trans;
 	float scale;

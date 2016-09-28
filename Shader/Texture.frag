@@ -1,6 +1,6 @@
 #version 430 core
 in vec2 texCoordUv;
-//in vec3 normal;
+in vec3 normal;
 out vec4 fragColor;
 
 uniform sampler2D texSampler;

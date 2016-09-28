@@ -288,7 +288,9 @@ RenderObject loadSMDToVao(SMDModel &m) {
     loadBuffer(&renderObj.vertices, sizeof(Vec3) * (int)m.vertices.size(), &m.vertices[0], ShaderAttributeBinding::VERTICES, 3, 0);
     loadBuffer(&renderObj.normals, sizeof(Vec3) * (int)m.normals.size(), &m.normals[0], ShaderAttributeBinding::NORMALS, 3, 0);
     loadBuffer(&renderObj.uvs, sizeof(Vec2) * (int)m.uvs.size(), &m.uvs[0], ShaderAttributeBinding::UV, 2, 0);
+	loadIntBuffer(&renderObj.jointIndices, sizeof(int) * (int)m.parentBones.size(), &m.parentBones[0], ShaderAttributeBinding::JOINT_INDICES, 1, 0);
+	//loadBuffer(&renderObj.jointWeights, sizeof(float) * (int)m.parentJoints.size(), &m.parentJoints[0], ShaderAttributeBinding::JOINT_WEIGHTS, 1, 0);
 
-    renderObj.numElements = (int)m.vertices.size();
+	renderObj.numElements = (int)m.vertices.size();
     return renderObj;
 }

@@ -10,7 +10,13 @@ void initAndSetVao(unsigned int *vao) {
     glBindVertexArray(*vao);
 }
 
-void loadBuffer(unsigned int *bufferId, int sizeBytes, void  *data, ShaderAttributeBinding shaderBinding, int perVertexComponents, int stride) {
+void loadBuffer(unsigned int *bufferId, 
+				int sizeBytes,
+				void  *data, 
+				ShaderAttributeBinding shaderBinding, 
+				int perVertexComponents, 
+				int stride,
+	int dataType) {
     glGenBuffers(1, bufferId);
     glBindBuffer(GL_ARRAY_BUFFER, *bufferId);
     glBufferData(GL_ARRAY_BUFFER, sizeBytes, data, GL_STATIC_DRAW);
@@ -18,10 +24,28 @@ void loadBuffer(unsigned int *bufferId, int sizeBytes, void  *data, ShaderAttrib
     // Bind this array buffer to the shader layout and define the data format.
     glVertexAttribPointer(shaderBinding,
         perVertexComponents,
-        GL_FLOAT,
+        dataType,
         GL_FALSE, // not normalized
         stride, (void*)0);
     glEnableVertexAttribArray(shaderBinding);
+}
+
+void loadBuffer(unsigned int *bufferId,
+	int sizeBytes,
+	void  *data,
+	ShaderAttributeBinding shaderBinding,
+	int perVertexComponents,
+	int stride) {
+	loadBuffer(bufferId, sizeBytes, data, shaderBinding, perVertexComponents, stride, GL_FLOAT);
+}
+
+void loadIntBuffer(unsigned int *bufferId,
+	int sizeBytes,
+	void  *data,
+	ShaderAttributeBinding shaderBinding,
+	int perVertexComponents,
+	int stride) {
+	loadBuffer(bufferId, sizeBytes, data, shaderBinding, perVertexComponents, stride, GL_INT);
 }
 
 void loadTexture(unsigned int *bufferId, int width, int height, void * data, int internalFormat, int pixelFormat)
@@ -89,6 +113,7 @@ void checkShaderLinkStatus(unsigned int shaderProgram) {
 void populateShaderUniformLocations(Uniform::ShaderUniformLocations &uniformLocations, unsigned int *shaderProgramId) {
     // single uniforms
     uniformLocations.mvp = glGetUniformLocation(*shaderProgramId, Uniform::mvp);
+	uniformLocations.skinningPalette = glGetUniformLocation(*shaderProgramId, Uniform::skinningPalette);
     //uniformLocations.mv = glGetUniformLocation(*shaderProgramId, Uniform::mv);
     //parseError("mv");
     //uniformLocations.v = glGetUniformLocation(*shaderProgramId, Uniform::v);
@@ -168,6 +193,6 @@ void loadFileToTexture(const char * fname, unsigned int * bufferId) {
 }
 
 
-void setMatUniform(unsigned int uniformLocation, const Mat4 &mat) {
-    glUniformMatrix4fv(uniformLocation, 1, false, &mat.m[0][0]);
+void setMatUniform(unsigned int uniformLocation, const Mat4 &mat, int size) {
+    glUniformMatrix4fv(uniformLocation, size, false, &mat.m[0][0]);
 }

@@ -171,6 +171,7 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shader\Anim.vert" />
     <None Include="Shader\Texture.frag" />
     <None Include="Shader\Texture.vert" />
   </ItemGroup>

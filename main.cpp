@@ -49,6 +49,7 @@ struct RenderContext {
 
     RenderObject modelRenderObj;
     Mat4 modelMat;
+	AnimationClip *animationClip;
 };
 void renderSetup(RenderContext &renderContext);
 void renderDraw(RenderContext &renderContext);
@@ -100,13 +101,21 @@ void setupConsole() {
     freopen("CON", "w", stderr);
 }
 
+// hacky
+int curFrame = 0;
+int numFrames = 0;
+
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (GLFW_PRESS == action) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GL_TRUE);
             break;
-        }
+		case GLFW_KEY_F:
+			curFrame = (curFrame + 1) % numFrames;
+			printf("Animation frame: %d\n", curFrame);
+			break;
+		};
     }
 }
 
@@ -184,7 +193,8 @@ void animationSetup(RenderContext &renderContext, SMDModel &model) {
 	loadAnimationForExistingModel("anim.smd", &model);
 	Skeleton *skeleton = generateSkeleton(model);
 	AnimationClip *clip = extractAnimationClipFromSMD(model, skeleton,0);
-	int i = 5;
+	numFrames = clip->numFrames;
+	renderContext.animationClip = clip;
 }
 
 void renderSetup(RenderContext &renderContext) {
@@ -200,7 +210,8 @@ void renderSetup(RenderContext &renderContext) {
     //loadFileToTexture("out.png", &renderContext.textureBufferId);
 
     int size;
-    char * vertexShaderSource = loadTextFile("Shader/Texture.vert", &size);
+	char * vertexShaderSource = loadTextFile("Shader/Anim.vert", &size);
+    //char * vertexShaderSource = loadTextFile("Shader/Texture.vert", &size);
     char * fragmentShaderSource = loadTextFile("Shader/Texture.frag", &size);
     createShader(renderContext.shaderUniforms, &renderContext.shaderProgram, vertexShaderSource, fragmentShaderSource);
     setShader(renderContext.shaderProgram);
@@ -225,8 +236,10 @@ void renderSetup(RenderContext &renderContext) {
 float rot = 0.0f;
 void renderDraw(RenderContext &renderContext) {
     renderContext.modelMat = Mat4::scale(0.5f) * Mat4::roty(rot)*Mat4::rotz(rot);
-    rot += 0.01f;
+    //rot += 0.01f;
 
+	AnimationSample *curSample = &renderContext.animationClip->samples[curFrame];
+	setMatUniform(renderContext.shaderUniforms.skinningPalette, *curSample->skinningPalette, renderContext.animationClip->skeleton->numJoints);
     setMatUniform(renderContext.shaderUniforms.mvp, renderContext.modelMat);
     setTexture(renderContext.modelTextureBufferId, 0, 0);
     drawVertexArray(renderContext.modelRenderObj.vao, renderContext.modelRenderObj.numElements);

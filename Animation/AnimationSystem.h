@@ -75,6 +75,7 @@ AnimationClip * extractAnimationClipFromSMD(const SMDModel &smdModel, Skeleton *
 			Pose * p = &(sample->poses)[j];
 			p->scale = 1.0f;
 			p->trans = bonePos.pos;
+			p->orientationMat = fromRot(Vec3(bonePos.rotX, bonePos.rotY, bonePos.rotZ));
 			p->orientation = Quat(bonePos.rotX, bonePos.rotY, bonePos.rotZ);
 
 			// Global pose matrix
@@ -87,7 +88,9 @@ AnimationClip * extractAnimationClipFromSMD(const SMDModel &smdModel, Skeleton *
 				globalOrientation = product(p->orientation, Quat(curJoint->rotX, curJoint->rotY, curJoint->rotZ));
 				globalTrans += curJoint->pos;
 			}
-			sample->globalPoses[j] = globalOrientation.toMat4();
+
+			// TODO quat->mat4 or euler rotation->quat, or both are broken...  euler->mat4 looks much smoother
+			sample->globalPoses[j] = p->orientationMat; // globalOrientation.toMat4();
 			sample->globalPoses[j].setTranslation(globalTrans);
 
 			// Skinning palette matrix
