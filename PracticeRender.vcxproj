@@ -155,6 +155,7 @@
     <ClCompile Include="Types\Quaternion.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation\AnimationInstance.h" />
     <ClInclude Include="Animation\AnimationSystem.h" />
     <ClInclude Include="Animation\Skeleton.h" />
     <ClInclude Include="Common.h" />
@@ -164,6 +165,7 @@
     <ClInclude Include="Types\HashTable.h" />
     <ClInclude Include="Types\Math.h" />
     <ClInclude Include="Types\Quaternion.h" />
+    <ClInclude Include="Types\Time.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Font\stb_image_write.h" />

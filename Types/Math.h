@@ -265,7 +265,6 @@ struct Mat4 {
 		m[3][3] = 1.0f;
 	}
 };
-
 Mat4 transpose(Mat4 m);
 
 Mat4 fromRot(Vec3 &rot);
