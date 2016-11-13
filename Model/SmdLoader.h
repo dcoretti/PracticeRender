@@ -14,6 +14,7 @@ using std::vector;
 
 #include "../Types/Math.h"
 
+const int MAX_BONE_LINKS = 4;
 
 struct SMDBone {
     int id;
@@ -56,9 +57,11 @@ struct SMDModel {
     vector<Vec3> vertices;
     vector<Vec3> normals;
     vector<Vec2> uvs;
-    vector<int> parentBones;
-    vector<SMDGroup> materialGroups;
+	// linkWeights and linkedBones contain MAX_BONE_LINKS per vertex.
+	vector<float> linkWeights;
+	vector<int> linkedBones;
 
+    vector<SMDGroup> materialGroups;
 	SMDSkeleton skeleton;
 	vector<SMDAnimation> animations;
 	// Bone name and skeleton structure.
@@ -86,17 +89,20 @@ void parseSMDTriangle(char * line, SMDModel &model) {
     Vec3 vertex;
     Vec3 normal;
     Vec2 uv;
+	//float linkWeights[4] = {};
+	//int linkedBones[4] = {};
     int parentBone;
     // TODO deal with these..
-    int links, boneId;
-    float weight;
-
-    int res = sscanf(line, "%d %f %f %f %f %f %f %f %f %d %d %f",
+	int links;
+	int offset;
+	// material posx posy posz normx normy normz u v links"
+    int res = sscanf(line, "%d %f %f %f %f %f %f %f %f %d%n",
         &parentBone,
         &vertex.x, &vertex.y, &vertex.z,
         &normal.x, &normal.y, &normal.z,
         &uv.x, &uv.y,
-        &links, &boneId, &weight);
+        &links,
+		&offset);
     if (res == 0) {
         size_t len = strlen(line);
         if (model.materialGroups.size() == 0  || strncmp(model.materialGroups.back().material, line, len) != 0) {
@@ -114,10 +120,35 @@ void parseSMDTriangle(char * line, SMDModel &model) {
         model.vertices.push_back(vertex);
         model.normals.push_back(normal);
         model.uvs.push_back(uv);
-        model.parentBones.push_back(parentBone);
         size_t size = model.vertices.size();
+		DBG_ASSERT(links <= MAX_BONE_LINKS, "Got too many bone links on line: \'%s\'", line);
+		if (res == 10 && links > 1) {
+			// override bone links
+			for (int i = 0; i < links; i++) {
+				int parentBone;
+				float boneWeight;
+				sscanf(&line[offset], "%d %f%n", parentBone, boneWeight, offset);
+				model.linkedBones.push_back(parentBone);
+				model.linkWeights.push_back(boneWeight);
 
-        // todo support last three optional parts
+			}
+			// Fill out non-specified bones. Note that we use bone 0 rather than -1 (SMD "no parent").  
+			// Bone 0 * 0.0 will be 0 anyway so it doesn't matter that bone0 is a real specified bone in the mesh.
+			for (int i = links; i < MAX_BONE_LINKS; i++)  {
+				model.linkedBones.push_back(0);		
+				model.linkWeights.push_back(0.0f);
+			}
+		} else {
+			model.linkedBones.push_back(parentBone);
+			model.linkedBones.push_back(0);
+			model.linkedBones.push_back(0);
+			model.linkedBones.push_back(0);
+
+			model.linkWeights.push_back(1.0f);
+			model.linkWeights.push_back(0.0f);
+			model.linkWeights.push_back(0.0f);
+			model.linkWeights.push_back(0.0f);
+		}
     } else {
         DBG_ASSERT(0, "Expected vertex line with 8/11 elements but got %d.  line: %s", res, line);
     }
@@ -250,10 +281,6 @@ void parseSMDFile(const char *fname, SMDModel *model, SMDLoadContext context) {
                 DBG_ASSERT(0, "Unable to parse line %s", line);
             }
         }
-
-
-
-
         delete[] line;
     }
     DBG_ASSERT(curState == NONE, "Expected end statement at end of file.  Currently in state %d", curState);
@@ -288,8 +315,9 @@ RenderObject loadSMDToVao(SMDModel &m) {
     loadBuffer(&renderObj.vertices, sizeof(Vec3) * (int)m.vertices.size(), &m.vertices[0], ShaderAttributeBinding::VERTICES, 3, 0);
     loadBuffer(&renderObj.normals, sizeof(Vec3) * (int)m.normals.size(), &m.normals[0], ShaderAttributeBinding::NORMALS, 3, 0);
     loadBuffer(&renderObj.uvs, sizeof(Vec2) * (int)m.uvs.size(), &m.uvs[0], ShaderAttributeBinding::UV, 2, 0);
-	loadIntBuffer(&renderObj.jointIndices, sizeof(int) * (int)m.parentBones.size(), &m.parentBones[0], ShaderAttributeBinding::JOINT_INDICES, 1, 0);
-	//loadBuffer(&renderObj.jointWeights, sizeof(float) * (int)m.parentJoints.size(), &m.parentJoints[0], ShaderAttributeBinding::JOINT_WEIGHTS, 1, 0);
+
+	loadBuffer(&renderObj.jointIndices, sizeof(int) * (int)m.linkedBones.size(), &m.linkedBones[0], ShaderAttributeBinding::JOINT_INDICES, MAX_BONE_LINKS, 0);
+	loadBuffer(&renderObj.jointWeights, sizeof(float) * (int)m.linkWeights.size(), &m.linkWeights[0], ShaderAttributeBinding::JOINT_WEIGHTS, MAX_BONE_LINKS, 0);
 
 	renderObj.numElements = (int)m.vertices.size();
     return renderObj;

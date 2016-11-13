@@ -17,7 +17,7 @@ struct RenderObject {
     unsigned int normals;
     unsigned int uvs;
 	unsigned int jointIndices;
-
+	unsigned int jointWeights;
     unsigned int numElements;
 };
 

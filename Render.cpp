@@ -16,7 +16,7 @@ void loadBuffer(unsigned int *bufferId,
 				ShaderAttributeBinding shaderBinding, 
 				int perVertexComponents, 
 				int stride,
-	int dataType) {
+				int dataType) {
     glGenBuffers(1, bufferId);
     glBindBuffer(GL_ARRAY_BUFFER, *bufferId);
     glBufferData(GL_ARRAY_BUFFER, sizeBytes, data, GL_STATIC_DRAW);

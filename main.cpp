@@ -274,14 +274,18 @@ void setDebugPrint(RenderContext &renderContext, uint64_t frameStart) {
 void bindDefaultAnimation(RenderContext &renderContext) {
 	Mat4 identityMatrix;
 	setMatUniform(renderContext.shaderUniforms.skinningPalette, identityMatrix, 1);
-	// set joint index to 0?
+	// set joint index to 0?  This should be done in the VAO generation for the non-animated thing. 
+	//  Does this mean all geometry needs a buffer of 0 for the joint indexes?
 }
 
 
 float rot = 0.0f;
 void renderDraw(RenderContext &renderContext, uint64_t frameStart) {
+	// Update animation state
 	renderContext.animationInstance.enabled = animEnabled;
 	handleAnimationAdvance(frameStart, renderContext.animationInstance);
+
+
 	// Draw model
     renderContext.modelMat = Mat4::scale(0.5f) * Mat4::roty(rot)*Mat4::rotz(rot);
     //rot += 0.01f;

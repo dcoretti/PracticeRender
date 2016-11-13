@@ -302,15 +302,23 @@ namespace Text {
         
         unsigned int uvb;
         unsigned int vb;
+		unsigned int weightb;
+
         initAndSetVao(vao);
         loadBuffer(&vb, len * 6 * sizeof(Vec3), geometryData, ShaderAttributeBinding::VERTICES, 3, 0);
         loadBuffer(&uvb, len * 6 * sizeof(Vec2), uvData, ShaderAttributeBinding::UV, 2, 0);
 
+		// Kind of a hack here.  just force it to use bone 0 for everything, which is the identity matrix
+		float * weights = new float[4 * len * 6];
+		for (int i = 0; i < 4 * len * 6; i++) {
+			weights[i] = 1.0f;
+		}
+		// TODO use a separate shader so i don't have to specify the extra crap here..
+		loadBuffer(&weightb, len * 6 * 4 * sizeof(float), weights, ShaderAttributeBinding::JOINT_WEIGHTS, 4, 0);
         delete[] geometryData;
         delete[] uvData;
-
+		delete[] weights;
         return len * 6;
-        // need to also return size of vertices to draw..
     }
 
 }
